@@ -1,0 +1,72 @@
+The Problem: The "Heavy" Dependency
+Imagine you are testing a UserService. To do its job, the UserService needs to talk to
+an Oracle Database via a UserRepository.
+
+If you use pure JUnit, you have to physically boot up an Oracle Database, insert a user,
+run the test, and delete the user. Your test will take 5 seconds to run. If you have
+2,000 tests, your build takes 3 hours. Furthermore, if the Wi-Fi drops, your test fails
+even though your Java code is perfect!
+
+The Senior Solution: Mocking
+Mockito allows you to create a "hollow clone" (a Mock) of the UserRepository.
+This clone doesn't connect to a database. It doesn't even have real code inside it.
+You simply "train" the clone by saying: "If the UserService asks you for User #1, just
+instantly return the word 'Mahesh'."
+
+Because there is no real database, the test runs in 1 millisecond and never fails
+due to Wi-Fi.
+/////////////////////////////////////////////////////////////////////////////////////////
+Step 1: The Dependency (The Database)
+        enterprise apps, we usually communicate with databases through interfaces. We
+        don't to test this interface today; we just want to bypass it.
+Step 2: The Class Under Test (The Business Logic)
+        This is the class we actually want to test. Notice how it requires a
+        UserRepository to function.
+Step 3: The Mockito Magic
+        Go to your src/test/java folder and create this test class.
+        Pay close attention to the three magical Mockito annotations: @ExtendWith,
+        @Mock, and @InjectMocks.
+
+The Parameterized Test (JUnit 5)
+To get the exact test runner output you provided (User age X should get Y discount),
+you can use JUnit 5's @ParameterizedTest with a custom name attribute.
+
+Key Components
+* @ParameterizedTest: Runs the same test method multiple times using different inputs,
+  which is much cleaner than writing five separate test methods.
+* name = "...": This attribute customizes the display name in your IDE's test runner
+  (like IntelliJ or Eclipse), producing the exact User age 10 should get 0.50 discount
+  format in the console tree.
+* @CsvSource: Injects the comma-separated strings directly into the age and
+  expectedDiscount parameters.
+///////////////////////////////////////////////////////////////////////////////////////
+The Problem: Void Methods and Hidden Actions
+In the previous test, getUserGreeting() returned a String, so you used assertEquals to
+check if the String was correct.
+But what if a method returns void?
+Imagine a UserRegistration class. When a user registers, it saves them to the database
+and then sends a Welcome Email. It doesn't return anything. How do you test if the
+email was actually sent without actually spamming real email addresses?
+
+The Senior Solution: Mockito verify()
+We create a Mock of the EmailService. We run the registration logic. Then, we ask
+Mockito: "Hey, did the UserService actually press the 'Send Email' button on the fake
+Email Service? How many times did it press it? What message did it try to send?"
+
+Step 1: The Dependency (The Email Server)
+Step 2: The Class Under Test
+Step 3: The Verification Test
+
+How to intentionally break this test to see it work:
+1. Run the test as-is. It will pass.
+2. Go into RegistrationService.java and comment out the emailService.sendEmail(...) line.
+3. Run the test again.
+   Mockito will crash the test with a brilliant error message:
+   Wanted but not invoked: mockEmailService.sendEmail(...)
+   Actually, there were zero interactions with this mock.
+
+You have now mastered the two pillars of Mockito:
+1. when().thenReturn(): Used to fake incoming data from a database.
+2. verify(): Used to prove that outgoing actions (like saving or emailing) actually
+   happened.
+///////////////////////////////////////////////////////////////////////////////////////
