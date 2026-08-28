@@ -70,3 +70,37 @@ You have now mastered the two pillars of Mockito:
 2. verify(): Used to prove that outgoing actions (like saving or emailing) actually
    happened.
 ///////////////////////////////////////////////////////////////////////////////////////
+The Argument Captor.
+You know how to use verify() when you know exactly what string or number is going to be
+passed to the mock. But what happens when the class you are testing creates a complex,
+dynamic object internally and sends that object to the database?
+
+The Problem: The Hidden Object
+Imagine you are building a Security System. Every time a user logs in, the
+SecurityService creates an AuditLog object to record the event and saves it to the
+database.
+
+The Issue: Because the AuditLog object is instantiated inside the login() method, your
+test file has no access to it. You cannot use verify(mock).save(exactObject) because
+you don't have the object to compare it against!
+
+The Senior Solution: Mockito @Captor
+An Argument Captor is like a net.
+Instead of telling Mockito exactly what to expect, you say: "I don't know what object
+the Service is going to pass to the Database. But when it does, throw a net over it,
+capture it, and bring it back to me so I can inspect its internal variables using
+JUnit."
+
+Step 1: The Domain Object & Dependency
+Step 2: The Class Under Test
+Step 3: The Captor Test
+/////////////////////////////////////////////////////////////////////////////////////////
+Recap:
+1. any(): Use when you don't care about the input parameter. (Also available:
+   anyString(), anyObject()).
+2. thenThrow(): The absolute best way to ensure your catch blocks actually work.
+3. @Spy: Use when you need a real object to perform real logic, but you want to
+   hijack just one specific method (like overriding a network call inside a real service).
+4. mockStatic(): The nuclear option. Only use this for un-injectable static utilities like
+   LocalDate.now() or UUID.randomUUID(). Always wrap it in a try() block to prevent test
+   contamination.
